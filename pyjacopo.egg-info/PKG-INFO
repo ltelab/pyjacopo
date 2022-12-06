@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pyjacopo
+Version: 1.0
+Summary: Python radar library for MXPOL
+Home-page: https://github.com/ltelab/pyjacopo
+Author: Daniel Wolfensberger - LTE EPFL
+Author-email: daniel.wolfensberger@epfl.ch
+License: GPL-3.0
+Description: UNKNOWN
+Platform: UNKNOWN
