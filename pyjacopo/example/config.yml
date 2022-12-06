@@ -1,0 +1,102 @@
+###################################
+main:
+    campaign_name: Davos_2016
+    radar_name: MXPol
+    datapath_raw: /ltedata/
+    org_datapath_raw:
+    datapath_proc:
+    datapath_proc2:
+    save_img_path:
+    save_img_path_2:
+###################################
+location:
+    radar_position:
+        latitude:
+        longitude:
+        altitude:
+        hemisphere:
+    az_offset: 31.
+    el_offset:
+    radar_beamwidth:
+    radar_beamwidth_tol:
+    radar_frequency:
+    radar_calibration_constant: 8.86
+    zdr_offset: 2.
+    h_channel: 0
+    v_channel: 1
+    fft2i_bug: 1
+###################################
+products:
+    datasets:
+        RHI:
+            products:
+                RHI_IMAGE:
+                    variables: ['Zh']
+                    continuous_cb: 2
+                TIMEHEIGHT_IMAGE:
+                    variables: ['Rhohv']
+                NETCDF_POLAR:
+                    nanval: -9999.0
+            processing:
+                discard_spectra: 0
+                discard_signal: 0
+                snr_phase: 10.
+                snr_pow: 5.
+                zdr_cal: -0.4
+                czdr_apply: True
+                att_corr:
+                    method: HBORDAN
+                phidp_kdp:
+                    phidp_method: MULTISTEP
+                    kdp_method: MULTISTEP
+                mask_out:
+                    snr: 5.
+                    rhohv: 0.6
+            range_min: 354.3
+        PPI:
+            products:
+                NETCDF_POLAR:
+                    nanval: -9999.0
+            processing:
+                snr_phase: 10.
+                snr_pow: -99999.
+                czdr_apply: True
+                att_corr:
+                    method: HBORDAN
+                phidp_kdp:
+                    phidp_method: MULTISTEP
+                    kdp_method: MULTISTEP
+                mask_out:
+                    snr: 5.
+                    rhohv: 0.6
+            range_min: 354.3
+            ang_tol: 0.3
+    ppi_image_config:
+        dx:
+        dy:
+        xmin:
+        xmax:
+        ymin:
+        ymax:
+    rhi_image_config:
+        dx:
+        dy:
+        xmin:
+        xmax:
+        ymin:
+        ymax:
+    sector_scan_image_config:
+        dx:
+        dy:
+        xmin:
+        xmax:
+        ymin:
+        ymax:
+    time_height_image_config:
+        ymin:
+        ymax:
+    save_img:
+    img_format:
+    convert_format:
+    parallel: 1
+###################################
