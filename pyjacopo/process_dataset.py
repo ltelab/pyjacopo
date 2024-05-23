@@ -17,25 +17,25 @@ from .config_parser.default_input import DATASET_DEFAULT
 from .algo.rhohv_noise_correction import rhohv_noise_correction
 from .pyart_wrapper import PyartMXPOL
 
-def _worker_fft(input_pow, vel_array, num_incoh):
+def _worker_fft(input_pow, vel_array, num_incoh, cfw=0):
     # Worker for fft multiprocessing
     input_powh = input_pow[0]
     input_powv = input_pow[1]
  
     # H    
     power_var = power_spectra_parameters(input_powh, vel_array, num_incoh = \
-                    num_incoh)
+                    num_incoh, cfw=cfw)
     sh  = power_var['power']
     vd  = power_var['m1_dop']
     sw  = power_var['m2_dop']
     nh  = power_var['noise_floor']
-
+    
     # V
     power_var = power_spectra_parameters(input_powv,vel_array,num_incoh = \
-                    num_incoh)
+                    num_incoh, cfw=cfw)
     sv  = power_var['power']
     nv  = power_var['noise_floor']
-    return sh, vd, sw, nh, sv, nh
+    return sh, vd, sw, nh, sv, nv
         
 def _worker_fft2(input_pow, vel_array, vel_array2, num_incoh):
     # Worker for fft2 multiprocessing
@@ -121,7 +121,7 @@ def process_dataset(dataset_name, header, records, config):
     p['el_offset'] = config['location']['el_offset']
     p['range_min'] = config['products']['datasets'][dname]['range_min']
     p['parallel'] = config['products']['parallel']
-
+    p['cfw'] = config['products']['datasets'][dname]['processing']['clutter_filter_width']
     # Add the radar frequency to phidp_kdp structure (some routines need it)
     p['phidp_kdp']['rad_freq'] = p['rad_freq']
 
@@ -328,7 +328,7 @@ def process_dataset(dataset_name, header, records, config):
         # Get signal from H and V spectra -- TODO add vectorization but I expect
         # it to be quite tricky...                
         worker = partial(_worker_fft, vel_array = vel_array, 
-                         num_incoh= cave * pave)
+                         num_incoh= cave * pave, cfw = p['cfw'])
         if p['parallel']:
             out = list(pool.map(worker, zip(spow_h, spow_v)))
         else:
@@ -340,7 +340,6 @@ def process_dataset(dataset_name, header, records, config):
         noise_h = np.array([o[3] for o in out])
         signal_v = np.array([o[4] for o in out])
         noise_v = np.array([o[5] for o in out])
-        
         
         # Average the Noise for this level of data and SNR
         snr_v = signal_v/noise_v
@@ -363,7 +362,9 @@ def process_dataset(dataset_name, header, records, config):
         proc_data['Va'] = va
         if not p['discard_spectra']:
             proc_data['sVel'] = vel_array
-            proc_data['sCC'] = np.abs(scc)
+            #proc_data['sCC'] = np.abs(scc)
+            proc_data['sCC_real'] = np.real(scc)
+            proc_data['sCC_imag'] = np.imag(scc)
             proc_data['sPowH'] = spow_h
             proc_data['sPowV'] = spow_v
 
@@ -541,10 +542,10 @@ def process_dataset(dataset_name, header, records, config):
 
 #    # Attenuation correction (if needed)
 #    if type(p['att_corr']) == dict:
-#        out = corr_att(rres, zh, zdr, proc_data['Phidp'], p['att_corr'])
-#        proc_data['ZhCorr'] = out['zh_corr']
-#        if 'zdr_corr' in out.keys():
-#            proc_data['ZdrCorr'] = out['zdr_corr']
+#         out = corr_att(rres, zh, zdr, proc_data['Phidp'], p['att_corr'])
+#         proc_data['ZhCorrAtt'] = out['zh_corr']
+#         if 'zdr_corr' in out.keys():
+#             proc_data['ZdrCorrAtt'] = out['zdr_corr']
     
     # Mask output according to SNR and Rhohv (TODO: add possibilities to
     # mask on other var.) (Nan  and 1, binary mask)
@@ -574,6 +575,8 @@ def process_dataset(dataset_name, header, records, config):
     if not p['discard_signal']:
         proc_data['Signal_h'] = signal_h
         proc_data['Signal_v'] = signal_v
+#        proc_data['Signal_cc_real'] = np.real(cc)
+#        proc_data['Signal_cc_imag'] = np.imag(cc)
         
     proc_data['Time'] = np.array([rr['gps_ts1'] for rr in records['header']])
     proc_data['Azimuth'] = az_arr
