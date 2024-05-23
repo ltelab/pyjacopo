@@ -7,6 +7,7 @@ Created on Wed Feb 22 15:37:45 2017
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 def get_noise(power,fft_avg, calc_stdv = False, mrr = False):
 
@@ -90,7 +91,7 @@ def get_noise(power,fft_avg, calc_stdv = False, mrr = False):
 
 def get_noise_vectorized(power,fft_avg):
     
-    nnoise = len(power[0])  # default to all points in t                                      he spectrum as noise
+    nnoise = len(power[0])  # default to all points in the spectrum as noise
     sorted_spectrum = np.sort(power, axis=1)
     npts_min = int(len(power[0]) / 10)
 
@@ -117,8 +118,15 @@ def get_noise_vectorized(power,fft_avg):
 
     return lnoise
     
+    
+def clutter_filter(power, vel_array, cfw):
+    filt = np.where((vel_array>=-cfw) & (vel_array<=cfw))[0]
+    power_filt = power#.copy()
+    power_filt[:,filt] = 10**(np.log10(power_filt[:,filt[0]-1]).reshape(-1,1) + (np.log10(power_filt[:,filt[-1]+1])-np.log10(power_filt[:,filt[0]-1])).reshape(-1,1)/(filt[-1]-filt[0]+2)*(filt-filt[0]+1).reshape(1,-1))
+    return power_filt
+
 def power_spectra_parameters(spec_in, vel_array, notch = True, num_incoh = 1,
-                             h_for_noise = 32, n_min_stat = 5):
+                             h_for_noise = 32, n_min_stat = 5, cfw = 0):
     '''
     PURPOSE: calculate moments from power spectra of dimension [height,FFTbins]
         Moments can be calculated either by notching the
@@ -164,6 +172,9 @@ def power_spectra_parameters(spec_in, vel_array, notch = True, num_incoh = 1,
 
     '''
 
+    if cfw != 0:
+        spec_in = clutter_filter(spec_in, vel_array, cfw)
+    
     # Get information about inputs
     sz  = spec_in.shape
     n_fft = len(vel_array)
@@ -187,7 +198,7 @@ def power_spectra_parameters(spec_in, vel_array, notch = True, num_incoh = 1,
 
     # Noise-level: power-density of the noise
     # Noise floor: noise level integrated over the area where the signal is
-    noise_level = m1_dop.copy()
+#     noise_level = m1_dop.copy()
 
     # A vectorized version of noise estimation is now available
     noise_level = get_noise_vectorized(spec_in, num_incoh)
@@ -199,7 +210,7 @@ def power_spectra_parameters(spec_in, vel_array, notch = True, num_incoh = 1,
     spec_out_pow[spec_out_pow < 0] = 0. # Noise-removed power
 
     # Get total power and total noise-floor
-    ncondi = np.sum(spec_out_pow == 0., axis = 1)
+    ncondi = np.sum(spec_out_pow >= 0., axis = 1)
     power = np.sum(spec_out_pow, axis = 1)
     noise_floor = ncondi * noise_level
 
@@ -207,6 +218,7 @@ def power_spectra_parameters(spec_in, vel_array, notch = True, num_incoh = 1,
     max_pos = np.argmax(spec_out_pow, axis = 1)
 
     spec_in = spec_out_pow.copy()
+    
     # Set the area of the spectrum where the signal is, in order to calculate its moments
     if notch:
         # Find the leftermost elements at the left of the max which
@@ -258,6 +270,6 @@ def power_spectra_parameters(spec_in, vel_array, notch = True, num_incoh = 1,
     # Create output structure
     params = {'m1_dop':m1_dop,'m2_dop':m2_dop,'m3_dop':m3_dop,'m4_dop':m4_dop,\
               'noise_level':noise_level,'noise_floor':noise_floor,'power':power,\
-              'snr':snr}
+              'snr':snr,'spec':spec_out_pow}
 
     return params
