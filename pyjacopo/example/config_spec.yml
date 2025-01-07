@@ -1,0 +1,147 @@
+###################################
+main:
+    campaign_name: ICEGENESIS 2021
+    radar_name: XPol5
+    datapath_raw:
+    org_datapath_raw:
+    datapath_proc:
+    datapath_proc2:
+    save_img_path:
+    save_img_path_2:
+###################################
+location:
+    radar_position:
+        latitude:
+        longitude:
+        altitude:
+        hemisphere:
+    az_offset: -12.2
+    el_offset:
+    radar_beamwidth:
+    radar_beamwidth_tol:
+    radar_frequency:
+    radar_calibration_constant: 8.86
+    zdr_offset: 
+    h_channel: 1
+    v_channel: 0
+    fft2i_bug: 1
+###################################
+products:
+    datasets:
+        RHI:
+            products:
+                RHI_IMAGE:
+                    variables: ['Zh']
+                    continuous_cb: 2
+                TIMEHEIGHT_IMAGE:
+                    variables: ['Rhohv']
+                NETCDF_POLAR:
+                    nanval: -9999.0
+            processing:
+                discard_spectra: 0
+                discard_signal: 0
+                snr_phase: 
+                snr_pow: -9999.
+                zdr_cal: 
+                czdr_apply: False
+                att_corr:
+                    method: HBORDAN
+                phidp_kdp:
+                    phidp_method: MULTISTEP
+                    kdp_method: MULTISTEP
+                mask_out:
+                    snr: -9999.
+                    rhohv: 0.
+                clutter_filter_width: 0.37
+                range_min: #354.3
+        PPI:
+            products:
+                NETCDF_POLAR:
+                    nanval: -9999.0
+            processing:
+                discard_spectra: 0
+                discard_signal: 0
+                snr_phase: 
+                snr_pow: -9999.
+                czdr_apply: False
+                att_corr:
+                    method: HBORDAN
+                phidp_kdp:
+                    phidp_method: MULTISTEP
+                    kdp_method: MULTISTEP
+                mask_out:
+                    snr: -9999.
+                    rhohv: 0.
+                clutter_filter_width: 0.37
+            range_min: 0.
+            ang_tol: 0.3
+        SECTOR_SCAN:
+            products:
+                NETCDF_POLAR:
+                    nanval: -9999.0
+            processing:
+                discard_spectra: 1
+                snr_phase: 10.
+                snr_pow: 5.
+                czdr_apply: False
+                att_corr:
+                    method: HBORDAN
+                phidp_kdp:
+                    phidp_method: MULTISTEP
+                    kdp_method: MULTISTEP
+                mask_out:
+                    snr: 5.
+                    rhohv: 0.6
+                clutter_filter_width: 0.37
+            range_min:
+            ang_tol: 0.3
+        PROFILE:
+            products:
+                NETCDF_POLAR:
+                    nanval: -9999.0
+            processing:
+                discard_spectra: 0
+                discard_signal: 0
+                snr_phase: 
+                snr_pow: -9999.
+                czdr_apply: True
+                att_corr:
+                    method: HBORDAN
+                phidp_kdp:
+                    phidp_method: MULTISTEP
+                    kdp_method: MULTISTEP
+                mask_out:
+                    snr: -9999.
+                    rhohv: 0.
+                clutter_filter_width: 0.37
+            range_min: #354.3
+            ang_tol: 0.3
+    ppi_image_config:
+        dx:
+        dy:
+        xmin:
+        xmax:
+        ymin:
+        ymax:
+    rhi_image_config:
+        dx:
+        dy:
+        xmin:
+        xmax:
+        ymin:
+        ymax:
+    sector_scan_image_config:
+        dx:
+        dy:
+        xmin:
+        xmax:
+        ymin:
+        ymax:
+    time_height_image_config:
+        ymin:
+        ymax:
+    save_img:
+    img_format:
+    convert_format:
+    parallel: 1
+###################################

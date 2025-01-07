@@ -12,8 +12,9 @@ plt.rcParams['figure.facecolor']='white'
 from ml_detection import detect_ml
 
 """
-This script computes the hydrometeor classification with demixing (Besic et al. 2018 doi:10.5194/amt-9-4425-2016) on the ICE GENESIS dataset.
-Most can be re-used for other datasets but some parts might be irrelevant.
+This script computes the hydrometeor classification with demixing (Besic et al. 2018 doi:10.5194/amt-9-4425-2016).
+It was initially setup for the processing of ICE GENESIS data - most of it can be re-used for other datasets but some parts might be irrelevant.
+Don't forget to change the paths in the " if __name__=='__main__' " section at the bottom. 
 NB this requires the meteoswiss version of pyart (pyart_mch)
 """
 
@@ -31,7 +32,7 @@ perm = [1,0,2,4,3,5,6,8,7]
 centroids = centroids[perm]  
 
 
-def classify_hm(fname,date,rain_flag=0):
+def classify_hm(fname,rain_flag=0):
     """
     Function to run hydrometeor classification with demixing (Besic et al. 2018) using the implementation in pyart-mch
     """
@@ -42,7 +43,6 @@ def classify_hm(fname,date,rain_flag=0):
     if rain_flag: 
         # if it rains, define iso0 as the top of the melting layer (detected using Wolfensberger and Berne 2018, see ml_detection.py script)
         ml_out, ml_obj, iso0_dict = detect_ml(radar)
-        ml_obj.fields['MLHeight']['data'].data
         iso0 = np.nanmean(ml_obj.fields['MLHeight']['data'][:,1])
     else: 
         # if it snows, set the iso0 below the ground
@@ -86,7 +86,7 @@ def classify_hm(fname,date,rain_flag=0):
     radar.metadata['ClassificationMethod'] = 'Besic et al. AMT 2016 with demixing of Besic et al. AMT 2018'
 
     # Adding the hydrometeor classification to the radar object
-    for i,key in enumerate(hydro_classif.keys()):
+    for _,key in enumerate(hydro_classif.keys()):
         radar.add_field(key,hydro_classif[key])
 
     for key in ['proportion_AG', 'proportion_CR', 'proportion_LR', 'proportion_RP', 'proportion_RN', 'proportion_VI', 'proportion_WS', 'proportion_MH', 'proportion_IH/HDG']:
@@ -107,7 +107,7 @@ def plot_classification(radar,savepath='tmp',xlim=(-20,20),ylim=(0,10)):
     norm = mpl.colors.BoundaryNorm(np.arange(2,12), cmap.N) 
     cbarticks = np.arange(2,12)+.5
     legend = ['AG', 'CR', 'LR', 'RP', 'RN', 'VI', 'WS', 'MH', 'IH'] # AG: aggregates, CR: crystals, LR: light rain, RP: rimed particles, RN: rain, VI: vertically-aligned ice, WS: wet snow, MH: melting hail, IH: ice hail
-    display.plot('hydro',cmap=cmap,norm=norm,ticks=cbarticks,ticklabs=legendVI)
+    display.plot('hydro',cmap=cmap,norm=norm,ticks=cbarticks,ticklabs=legend)
     ax.set_ylim(ylim)
     ax.set_xlim(xlim)
     fig.savefig(savepath,dpi=300,bbox_inches='tight')
@@ -134,6 +134,8 @@ def find_rain_flag(rain_events_csv, date):
             print('RAIN')
             break
 
+    return rain_flag
+
 
 if __name__=='__main__':
     
@@ -150,7 +152,7 @@ if __name__=='__main__':
             date = datetime.datetime.strptime(name,'XPOL-%Y%m%d-%H%M%S')
 
             rain_flag = find_rain_flag('/ltenas8/users/anneclaire/ICEGENESIS_2021/rain_events.csv',date)
-            radar_w_hm = classify_hm(fname,date,rain_flag=rain_flag)
+            radar_w_hm = classify_hm(fname,rain_flag=rain_flag)
             plot_classification(radar_w_hm,xlim=(-15,1),ylim=(0,6),savepath=savepath)
 
             # there is a conflict with some fields having a '_FillValue' fields and others not, so we do:
